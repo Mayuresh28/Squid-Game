@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalgona Game</title>
+    {% load static %}
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #game-container {
+            position: relative;
+            width: 800px; /* Adjust size if necessary */
+            height: 600px; /* Adjust size if necessary */
+        }
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1; /* Ensure video is on top */
+        }
+        #cookie-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%; /* Adjust size as needed */
+            height: auto;
+            z-index: 2; /* Ensure image is above the video */
+            pointer-events: none; /* Allows clicking through the image */
+        }
+        #video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Blackish filter */
+            z-index: 3; /* Ensure overlay is above video and image */
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <video id="video" autoplay playsinline></video>
+        <img id="cookie-image" src="{% static 'game/dalgona_cookie.png' %}" alt="Dalgona Cookie">
+        <div id="video-overlay"></div>
+    </div>
+
+    <!-- Include MediaPipe JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.min.js"></script>
+
+    <script>
+        const video = document.getElementById('video');
+        const cookieImage = document.getElementById('cookie-image');
+        const canvas = document.createElement('canvas');
+        const canvasCtx = canvas.getContext('2d');
+        document.body.appendChild(canvas);
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.5.3/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(results => {
+            drawHandLandmarks(results);
+            checkHandInteraction(results);
+        });
+
+        async function setupCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.play();
+            const camera = new Camera(video, {
+                onFrame: async () => {
+                    await hands.send({ image: video });
+                },
+                width: 800,
+                height: 600
+            });
+            camera.start();
+        }
+
+        function drawHandLandmarks(results) {
+            canvas.width = video.width;
+            canvas.height = video.height;
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.multiHandLandmarks) {
+                results.multiHandLandmarks.forEach(handLandmarks => {
+                    drawingUtils.drawConnectors(canvasCtx, handLandmarks, Hands.HAND_CONNECTIONS, {
+                        color: '#00FF00',
+                        lineWidth: 5
+                    });
+                    drawingUtils.drawLandmarks(canvasCtx, handLandmarks, {
+                        color: '#FF0000',
+                        lineWidth: 2
+                    });
+                });
+            }
+        }
+
+        function checkHandInteraction(results) {
+            if (results.multiHandLandmarks) {
+                results.multiHandLandmarks.forEach(handLandmarks => {
+                    const indexFingerTip = handLandmarks[8];
+                    const x = indexFingerTip.x * video.width;
+                    const y = indexFingerTip.y * video.height;
+
+                    const cookieRect = cookieImage.getBoundingClientRect();
+                    const videoRect = video.getBoundingClientRect();
+
+                    if (x >= cookieRect.left - videoRect.left &&
+                        x <= cookieRect.right - videoRect.left &&
+                        y >= cookieRect.top - videoRect.top &&
+                        y <= cookieRect.bottom - videoRect.top) {
+                        console.log("Interacting with the cookie");
+                        // Additional logic for interaction
+                    }
+                });
+            }
+        }
+
+        setupCamera();
+    </script>
+</body>
+</html>

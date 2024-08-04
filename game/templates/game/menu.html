@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Squid Game Menu</title>
+    {% load static %}
+    <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+
+        body {
+            background-color: #000; /* Black background */
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        .left-section, .right-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .left-section {
+            flex-direction: column;
+        }
+        .top-image, .buttons {
+            transform: scale(1.5); /* Scale top image and buttons */
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .button {
+            background-color: #000; /* Black background */
+            border: 5px solid #E81C6F; /* Red border */
+            border-radius: 15px;
+            color: #E81C6F; /* Red text color */
+            padding: 20px;
+            text-align: left;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 900;
+            width: 200px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .button:hover {
+            background-color: #333; /* Darker black on hover */
+            transform: scale(1.05); /* Slight zoom on hover */
+        }
+        .button i {
+            margin-right: 10px;
+            font-size: 20px;
+            color: #E81C6F; /* Red icon color */
+        }
+        .top-image img {
+            width: 300px; /* Set top image width */
+            margin-bottom: 120px; /* Space between the top image and buttons */
+        }
+        .right-section img {
+            width: 100%; /* Set image width to 100% of the container */
+            max-width: 1200px; /* Maximum width for the image */
+            transform: scale(2); /* Scale image to twice its size */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="top-image">
+                <img src="{% static 'game/top_image.png' %}" alt="Top Image">
+            </div>
+            <div class="buttons">
+                <button class="button" id="redlight-button">
+                    <i class="fas fa-walking"></i> Red Light
+                </button>
+                <button class="button" id="dalgona-button">
+                    <i class="fas fa-cookie"></i> Dalgona
+                </button>
+               <button class="button" onclick="location.href='{% url 'quit' %}'">
+                    <i class="fas fa-sign-out-alt"></i> Quit
+                </button>
+            </div>
+        </div>
+        <div class="right-section">
+            <img src="{% static 'game/squid_game_image.png' %}" alt="Squid Game">
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $('#redlight-button').click(function() {
+                $.ajax({
+                    url: '{% url "execute_redlight" %}',
+                    type: 'GET',
+                    success: function(response) {
+                        alert(response.message);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            $('#dalgona-button').click(function() {
+                $.ajax({
+                    url: '{% url "start_dalgona" %}',
+                    type: 'GET',
+                    success: function(response) {
+                        alert(response.message);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
